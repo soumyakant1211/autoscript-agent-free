@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoScript Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">⟨/⟩</span>
+      <div>
+        <h1>AutoScript Agent</h1>
+        <p>AI test-automation framework generator · 50+ stacks</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="newBtn" class="ghost">New project</button>
+      <button id="zipBtn" class="primary" disabled>⬇ Download ZIP</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: configuration -->
+    <section class="panel config">
+      <h2>1 · Configure</h2>
+
+      <div id="pwWrap" class="field hidden">
+        <label for="pw">Access password</label>
+        <input id="pw" type="password" placeholder="Set by the app owner" autocomplete="current-password" />
+      </div>
+
+      <div class="field">
+        <label for="stack">Tech stack</label>
+        <input id="stackFilter" type="search" placeholder="Filter stacks… (e.g. playwright, appium, k6)" />
+        <select id="stack"></select>
+        <div id="stackInfo" class="stack-info"></div>
+      </div>
+
+      <div class="field">
+        <label for="desc">What should be automated? <span class="req">*</span></label>
+        <textarea id="desc" rows="7" placeholder="e.g. E-commerce web app. Automate: login (valid/invalid), search product, add to cart, checkout with guest user, verify order confirmation. Also cover GET/POST /api/orders."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="url">Application URL / Base URI <span class="muted">(optional)</span></label>
+        <input id="url" type="text" placeholder="https://www.saucedemo.com" />
+      </div>
+
+      <div class="field">
+        <label>Features <span class="muted" id="featCount"></span></label>
+        <div class="feat-actions">
+          <button type="button" class="link" id="featRec">Recommended</button>
+          <button type="button" class="link" id="featAll">All</button>
+          <button type="button" class="link" id="featNone">None</button>
+        </div>
+        <div id="features" class="features"></div>
+      </div>
+
+      <div class="field">
+        <label for="extra">Extra instructions <span class="muted">(optional)</span></label>
+        <textarea id="extra" rows="3" placeholder="e.g. Use Java 21, package com.acme.qa, run headless on Chrome & Firefox"></textarea>
+      </div>
+
+      <button id="genBtn" class="primary big">⚡ Generate framework</button>
+    </section>
+
+    <!-- CENTER: files -->
+    <section class="panel files">
+      <div class="files-head">
+        <h2>2 · Project files <span id="fileCount" class="muted"></span></h2>
+        <button id="copyBtn" class="ghost small" disabled>Copy file</button>
+      </div>
+      <div class="files-body">
+        <nav id="tree" class="tree"><p class="empty">Files appear here as the agent writes them.</p></nav>
+        <div class="viewer">
+          <div id="viewerPath" class="viewer-path">—</div>
+          <pre><code id="code" class="hljs"></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: chat -->
+    <section class="panel chat">
+      <h2>3 · Talk to the agent</h2>
+      <div id="messages" class="messages">
+        <div class="msg agent">
+          <div class="bubble">Hi! Pick a stack, describe your app and choose features, then hit <b>Generate</b>. Afterwards you can ask me to change anything — <i>"add a negative login test"</i>, <i>"switch reports to Extent"</i>, <i>"add a Jenkinsfile"</i>.</div>
+        </div>
+      </div>
+      <form id="chatForm" class="chat-form">
+        <textarea id="chatInput" rows="2" placeholder="Ask for changes… (Enter to send, Shift+Enter for new line)" disabled></textarea>
+        <button id="sendBtn" class="primary" disabled>Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

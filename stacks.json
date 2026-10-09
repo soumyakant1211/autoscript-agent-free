@@ -1,0 +1,70 @@
+[
+  { "group": "Java", "items": [
+    { "id": "java-selenium-testng", "label": "Java + Selenium + TestNG", "type": "ui", "build": "Maven", "hint": "Selenium 4 with Selenium Manager (no WebDriverManager needed), TestNG 7, Page Object Model, ThreadLocal drivers for parallel runs." },
+    { "id": "java-selenium-testng-cucumber", "label": "Java + Selenium + TestNG + Cucumber (BDD)", "type": "ui-bdd", "build": "Maven", "hint": "Cucumber 7 with cucumber-testng runner, PicoContainer DI, Gherkin feature files, step definitions, hooks." },
+    { "id": "java-selenium-junit5", "label": "Java + Selenium + JUnit 5", "type": "ui", "build": "Maven", "hint": "JUnit Jupiter 5 with extensions, @ParameterizedTest, junit-platform.properties for parallel execution." },
+    { "id": "java-restassured-testng", "label": "Java + RestAssured + TestNG (API)", "type": "api", "build": "Maven", "hint": "RestAssured 5, RequestSpecBuilder, POJO serialization with Jackson, JSON schema validation." },
+    { "id": "java-restassured-cucumber", "label": "Java + RestAssured + Cucumber (API BDD)", "type": "api-bdd", "build": "Maven", "hint": "Cucumber 7 + RestAssured, shared scenario context, Gherkin API scenarios.", "added": true },
+    { "id": "java-playwright-testng", "label": "Java + Playwright + TestNG", "type": "ui", "build": "Maven", "hint": "com.microsoft.playwright, one Browser per thread and BrowserContext per test, tracing on failure." },
+    { "id": "java-playwright-junit5", "label": "Java + Playwright + JUnit 5", "type": "ui", "build": "Maven", "hint": "Playwright Java with JUnit 5 @UsePlaywright or manual fixtures, tracing on failure." },
+    { "id": "java-selenide-junit5", "label": "Java + Selenide + JUnit 5", "type": "ui", "build": "Gradle", "hint": "Selenide concise API, built-in waits and screenshots, Allure-Selenide listener.", "added": true },
+    { "id": "java-appium-testng", "label": "Java + Appium + TestNG (mobile)", "type": "mobile", "build": "Maven", "hint": "Appium 2 java-client 9+, UiAutomator2 / XCUITest options classes, mobile Page Objects with @AndroidFindBy/@iOSXCUITFindBy." },
+    { "id": "java-karate", "label": "Java + Karate (API)", "type": "api", "build": "Maven", "hint": "Karate feature files, karate-config.js for environments, JUnit 5 runner with parallel execution." },
+    { "id": "java-serenity-selenium", "label": "Java + Serenity BDD + Selenium", "type": "ui-bdd", "build": "Maven", "hint": "Serenity BDD with Screenplay pattern (Actors, Tasks, Questions), Cucumber integration, Serenity living documentation reports." }
+  ]},
+  { "group": "TypeScript / JavaScript", "items": [
+    { "id": "ts-playwright", "label": "TypeScript + Playwright Test (UI + API)", "type": "ui-api", "build": "npm", "hint": "@playwright/test, playwright.config.ts with projects, custom fixtures, APIRequestContext, storageState auth, getByRole locators." },
+    { "id": "ts-playwright-cucumber", "label": "TypeScript + Playwright + Cucumber (BDD)", "type": "ui-bdd", "build": "npm", "hint": "@cucumber/cucumber with Playwright, World class, hooks, ts-node/tsx.", "added": true },
+    { "id": "js-playwright", "label": "JavaScript + Playwright Test", "type": "ui", "build": "npm", "hint": "@playwright/test in JavaScript with ESM, fixtures and projects." },
+    { "id": "ts-cypress", "label": "TypeScript + Cypress", "type": "ui", "build": "npm", "hint": "Cypress 13+, cypress.config.ts, custom commands with type declarations, cy.intercept, cy.session." },
+    { "id": "js-cypress", "label": "JavaScript + Cypress", "type": "ui", "build": "npm", "hint": "Cypress in JavaScript, fixtures, custom commands, cy.intercept." },
+    { "id": "ts-wdio-mocha", "label": "TypeScript + WebdriverIO + Mocha", "type": "ui", "build": "npm", "hint": "WebdriverIO v9, wdio.conf.ts, Mocha framework, page objects with getters." },
+    { "id": "js-wdio-mocha", "label": "JavaScript + WebdriverIO + Mocha", "type": "ui", "build": "npm", "hint": "WebdriverIO v9 in JavaScript, Mocha, page objects." },
+    { "id": "js-wdio-appium", "label": "JavaScript + WebdriverIO + Appium (mobile)", "type": "mobile", "build": "npm", "hint": "WebdriverIO v9 + Appium 2 service, UiAutomator2/XCUITest capabilities, mobile selectors (~accessibilityId)." },
+    { "id": "ts-wdio-appium", "label": "TypeScript + WebdriverIO + Appium (mobile)", "type": "mobile", "build": "npm", "hint": "Typed WDIO v9 + Appium 2, screen objects pattern, Android & iOS capabilities.", "added": true },
+    { "id": "ts-detox", "label": "TypeScript + Detox (React Native)", "type": "mobile", "build": "npm", "hint": "Detox gray-box testing with Jest runner, .detoxrc.js, by.id testIDs.", "added": true },
+    { "id": "js-jest-supertest", "label": "JavaScript + Jest + Supertest (API)", "type": "api", "build": "npm", "hint": "Jest 29+, Supertest against a base URL, schema validation with ajv." },
+    { "id": "js-postman-newman", "label": "JavaScript + Postman + Newman (API)", "type": "api", "build": "npm", "hint": "Postman collection v2.1 JSON with pm.test scripts, environment files, Newman runner with htmlextra reporter." },
+    { "id": "ts-pact", "label": "TypeScript + Pact (contract testing)", "type": "api", "build": "npm", "hint": "Pact JS V4 consumer tests, provider verification, Pact Broker publishing.", "added": true }
+  ]},
+  { "group": "Python", "items": [
+    { "id": "py-playwright-pytest", "label": "Python + Playwright + pytest", "type": "ui", "build": "pip", "hint": "pytest-playwright plugin, page fixture, expect assertions, conftest.py fixtures, pyproject.toml." },
+    { "id": "py-pytest-bdd-playwright", "label": "Python + pytest-bdd + Playwright (BDD)", "type": "ui-bdd", "build": "pip", "hint": "pytest-bdd scenarios with pytest-playwright fixtures.", "added": true },
+    { "id": "py-selenium-pytest", "label": "Python + Selenium + pytest", "type": "ui", "build": "pip", "hint": "Selenium 4 with Selenium Manager, conftest driver fixture, page objects, pytest-xdist." },
+    { "id": "py-requests-pytest", "label": "Python + requests + pytest (API)", "type": "api", "build": "pip", "hint": "requests.Session API client wrapper, pydantic models, jsonschema validation." },
+    { "id": "py-behave-selenium", "label": "Python + Behave + Selenium (BDD)", "type": "ui-bdd", "build": "pip", "hint": "Behave features, steps, environment.py hooks, page objects." },
+    { "id": "py-appium-pytest", "label": "Python + Appium + pytest (mobile)", "type": "mobile", "build": "pip", "hint": "Appium-Python-Client 4+, UiAutomator2Options / XCUITestOptions, AppiumBy locators." },
+    { "id": "py-robot-selenium", "label": "Python + Robot Framework + SeleniumLibrary", "type": "ui", "build": "pip", "hint": "Robot Framework 7 .robot suites, resource files, variables, keywords." },
+    { "id": "py-robot-browser", "label": "Python + Robot Framework + Browser library (Playwright-based)", "type": "ui", "build": "pip", "hint": "robotframework-browser, rfbrowser init, New Browser/New Context/New Page keywords." },
+    { "id": "py-robot-requests", "label": "Python + Robot Framework + RequestsLibrary (API)", "type": "api", "build": "pip", "hint": "RequestsLibrary sessions, JSON validation keywords." },
+    { "id": "py-locust", "label": "Python + Locust (performance)", "type": "perf", "build": "pip", "hint": "Locust HttpUser, tasks with weights, load shapes, headless CLI runs with CSV/HTML output." },
+    { "id": "py-schemathesis", "label": "Python + Schemathesis (API fuzzing)", "type": "api", "build": "pip", "hint": "Property-based API testing from an OpenAPI spec, pytest integration.", "added": true }
+  ]},
+  { "group": "C# (.NET)", "items": [
+    { "id": "cs-selenium-nunit", "label": "C# + Selenium + NUnit", "type": "ui", "build": ".NET", "hint": ".NET 8, Selenium.WebDriver 4, NUnit 4, page objects, appsettings.json config, Parallelizable." },
+    { "id": "cs-playwright-nunit", "label": "C# + Playwright + NUnit", "type": "ui", "build": ".NET", "hint": "Microsoft.Playwright.NUnit PageTest base class, .runsettings." },
+    { "id": "cs-reqnroll-selenium", "label": "C# + Reqnroll (formerly SpecFlow) + Selenium (BDD)", "type": "ui-bdd", "build": ".NET", "hint": "Reqnroll with NUnit, feature files, [Binding] step classes, context injection, hooks." },
+    { "id": "cs-restsharp-nunit", "label": "C# + RestSharp + NUnit (API)", "type": "api", "build": ".NET", "hint": "RestSharp 111+, RestClient with options, typed responses, FluentAssertions." },
+    { "id": "cs-appium-nunit", "label": "C# + Appium + NUnit (mobile)", "type": "mobile", "build": ".NET", "hint": "Appium.WebDriver 5+, AndroidDriver/IOSDriver, AppiumOptions.", "added": true }
+  ]},
+  { "group": "Native & cross-platform mobile", "items": [
+    { "id": "maestro", "label": "Maestro (mobile flows, YAML)", "type": "mobile", "build": "Maestro CLI", "hint": "Maestro YAML flows, tags, subflows, Maestro Cloud / CI usage.", "added": true },
+    { "id": "kotlin-espresso", "label": "Kotlin + Espresso (Android native)", "type": "mobile", "build": "Gradle", "hint": "AndroidX Test, Espresso, ActivityScenarioRule, robot pattern.", "added": true },
+    { "id": "swift-xcuitest", "label": "Swift + XCUITest (iOS native)", "type": "mobile", "build": "Xcode", "hint": "XCTest UI tests, XCUIApplication, page objects, xcodebuild test plans.", "added": true }
+  ]},
+  { "group": "Low-code / codeless tools", "items": [
+    { "id": "tosca", "label": "Tricentis Tosca", "type": "codeless", "build": "Tosca Commander", "hint": "Describe Modules, TestCases, TestCaseDesign, TestSheets, ExecutionLists, and XScan steps in structured form; export-ready step tables." },
+    { "id": "katalon", "label": "Katalon Studio", "type": "codeless", "build": "Katalon", "hint": "Groovy test case scripts using WebUI/Mobile/WS keywords, Object Repository descriptions, Test Suites, Profiles." },
+    { "id": "uft", "label": "UFT One (OpenText)", "type": "codeless", "build": "UFT", "hint": "VBScript actions, Object Repository description, descriptive programming, DataTable usage, function libraries." },
+    { "id": "testcomplete", "label": "TestComplete", "type": "codeless", "build": "TestComplete", "hint": "JavaScript or Python script units, NameMapping/Aliases, keyword test outline, data-driven loops." },
+    { "id": "leapwork", "label": "Leapwork", "type": "codeless", "build": "Leapwork", "hint": "Flow design described as building blocks (Start, Find web element, Click, Set text, Verify), sub-flows, data-driven via loops." },
+    { "id": "accelq", "label": "ACCELQ", "type": "codeless", "build": "ACCELQ", "hint": "Contexts, Actions, Scenarios, Test Cases with data, NLP-style logic statements." }
+  ]},
+  { "group": "Performance & security", "items": [
+    { "id": "jmeter", "label": "JMeter", "type": "perf", "build": "JMeter", "hint": "Valid .jmx XML test plan with Thread Groups, HTTP Samplers, CSV Data Set, assertions, listeners; CLI non-GUI run commands." },
+    { "id": "k6", "label": "k6 (JavaScript)", "type": "perf", "build": "k6", "hint": "k6 scripts with options, scenarios/executors, thresholds, checks, groups, handleSummary." },
+    { "id": "gatling", "label": "Gatling (Java/Scala)", "type": "perf", "build": "Maven", "hint": "Gatling Java DSL (preferred), injection profiles, feeders, assertions." },
+    { "id": "artillery", "label": "Artillery (performance)", "type": "perf", "build": "npm", "hint": "Artillery YAML scenarios, phases, Playwright engine for browser load, ensure thresholds.", "added": true },
+    { "id": "zap", "label": "OWASP ZAP", "type": "security", "build": "ZAP", "hint": "ZAP Automation Framework YAML plan (spider, passiveScan, activeScan, report), Docker baseline/full scan, ZAP API usage." }
+  ]}
+]

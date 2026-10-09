@@ -1,0 +1,18 @@
+# Render Blueprint — free web service. Render → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: autoscript-agent
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false        # Render asks you for the value
+      - key: APP_PASSWORD
+        sync: false
+      - key: RATE_LIMIT_PER_HOUR
+        value: "20"

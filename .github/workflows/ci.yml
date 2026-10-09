@@ -1,19 +1,34 @@
-# Free CI: checks the server boots and serves the stack list on every push.
+# Free CI: type-check, build, migrate a throwaway Postgres and smoke-test the API on every push.
 name: CI
 on: [push, pull_request]
 
 jobs:
-  smoke:
+  build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: autoscript }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/autoscript
+      BETTER_AUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+      BETTER_AUTH_URL: http://localhost:3000
+      MOCK_MODE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - run: npm install --omit=dev
-      - name: Boot server in mock mode and check endpoints
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run db:migrate
+      - run: npm run build
+      - name: Smoke test (anonymous guest generates once)
         run: |
-          (MOCK_MODE=1 PORT=8080 node server.js &) ; sleep 3
-          curl -sf http://localhost:8080/health
-          curl -sf http://localhost:8080/api/stacks > /dev/null
-          curl -sfN -X POST http://localhost:8080/api/generate -H 'content-type: application/json' \
-            -d '{"stackId":"ts-playwright","description":"Login flow smoke test"}' | grep -q "event: done"
+          (npm start &) ; sleep 6
+          curl -sf http://localhost:3000/api/health
+          curl -sf -c jar -b jar -H 'content-type: application/json' -H 'origin: http://localhost:3000' \
+            -X POST http://localhost:3000/api/auth/sign-in/anonymous -d '{}' > /dev/null
+          curl -sf -c jar -b jar -H 'content-type: application/json' -X POST http://localhost:3000/api/generate \
+            -d '{"projectId":"ci-project-0001","stackId":"ts-playwright","description":"Login flow smoke test"}' | grep -q "event: done"

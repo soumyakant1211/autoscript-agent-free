@@ -4,15 +4,37 @@ services:
     name: autoscript-agent
     runtime: node
     plan: free
-    buildCommand: npm install --omit=dev
-    startCommand: node server.js
-    healthCheckPath: /health
+    buildCommand: npm ci && npm run db:migrate && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
       - key: AI_PROVIDER
         value: gemini
       - key: GEMINI_API_KEY
-        sync: false        # Render asks you for the value
-      - key: APP_PASSWORD
         sync: false
-      - key: RATE_LIMIT_PER_HOUR
-        value: "20"
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: DEMO_LOGINS
+        value: "1"
+      - key: DEMO_PASSWORD
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false

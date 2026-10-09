@@ -1,119 +1,132 @@
-# AutoScript Agent — 100% free setup
+# AutoScript Agent Pro
 
-An AI agent that generates complete, runnable **test automation frameworks** for **54 tech stacks** — Java, TypeScript/JavaScript, Python, C#, native mobile, low-code tools, performance and security.
+Full-stack AI agent that generates complete, runnable **test automation frameworks** for **54 tech stacks** (Selenium, Playwright, Cypress, Appium, RestAssured, Karate, Robot Framework, k6, JMeter, OWASP ZAP, low-code tools and more) — with sign-in, roles, monthly quotas, saved history and an admin panel. Runs entirely on free tiers.
 
-Everything in this guide is free: free AI model, free hosting, no paid plans.
+## Tech stack
+| Layer | Choice |
+|---|---|
+| Framework | **Next.js 16** (App Router, React 19, TypeScript) |
+| Styling | **Tailwind CSS v4** |
+| Auth | **Better Auth** — Google, Microsoft, GitHub, email magic link, anonymous guests, admin roles |
+| Database | **PostgreSQL** (free on **Neon**) via **Drizzle ORM** |
+| AI | Google **Gemini** (free) — or Groq / OpenRouter / Ollama / Claude |
+| Email | **Resend** (magic links) |
+| Hosting / CI | **Render** (free) · **GitHub Actions** |
 
-**UI features**
-- 🔽 Grouped stack dropdown with search (★ = stacks added beyond the original 41)
-- ✅ Feature chips that adapt to the stack type (UI / API / mobile / perf / security / low-code)
-- ⚡ Live streaming — files appear in the explorer as the agent writes them
-- 💬 Chat to refine ("add a negative login test", "switch to Extent reports")
-- 📄 Syntax-highlighted viewer, copy-file, **Download ZIP**
+## Roles & limits
+| Role | How you get it | New frameworks / month | Follow-ups per project | History | Admin panel |
+|---|---|---|---|---|---|
+| **Guest (no sign-in)** | Click Generate or "Continue as guest" | 2 (per browser **and** per IP) | 3 | — | — |
+| **Guest** | Sign in with Google / Microsoft / GitHub / email | 5 | 5 | — | — |
+| **Member** | An admin upgrades you | 50 | 30 | ✓ | — |
+| **Demo admin** | "Demo admin" button (shared, public) | 5 | 5 | ✓ | Read-only, emails masked |
+| **Admin** | Your email in `ADMIN_EMAILS` | Unlimited | Unlimited | ✓ | Full: change roles, ban/unban |
+
+- Limits reset on the 1st of each month (UTC) and can be changed with `LIMIT_*` env vars.
+- When a guest signs in, what they already used carries over — signing in can't be used to reset the count.
+- All limits and permissions are enforced on the server. Better Auth's own admin endpoints also reject non-admins.
 
 ---
 
-## Step 1 — Get a free AI key (pick one)
+## Deploy for free (about 30 minutes)
 
-| Provider | Cost | Card needed? | Best for | Set in `.env` |
-|---|---|---|---|---|
-| **Google Gemini** (default) | Free tier | No | Best free quality, large output | `AI_PROVIDER=gemini`, `GEMINI_API_KEY=` |
-| **Groq** | Free tier | No | Very fast, but small output (~6k tokens) — good for small frameworks / chat edits | `AI_PROVIDER=groq`, `GROQ_API_KEY=` |
-| **OpenRouter** | Free models | No | Many free models (names ending in `:free`) | `AI_PROVIDER=openrouter`, `OPENROUTER_API_KEY=`, `AI_MODEL=<model>:free` |
-| **Ollama** | Free forever, unlimited | No account | Runs on your own PC, works offline. Needs ~8 GB+ RAM | `AI_PROVIDER=ollama` |
+### 1. Free database — Neon
+1. Sign up at https://neon.com (GitHub or Google login).
+2. Create a project → region **AWS Asia Pacific (Singapore)** is closest to India.
+3. **Connect** → copy the connection string (`postgresql://…?sslmode=require`). This is your `DATABASE_URL`.
 
-**Gemini (recommended):** go to https://aistudio.google.com/apikey → sign in with Google → *Create API key* → copy it.
+Free plan: 0.5 GB storage; the database sleeps after 5 minutes idle and wakes on the next request.
 
-Free-tier notes:
-- Free tiers have per-minute and per-day request limits. If you hit one, the app shows "rate limit reached" — wait a minute and retry. Your exact limits are shown in AI Studio / Groq console.
-- On Google's free tier, prompts may be used to improve Google's products. Don't paste confidential company code or credentials into the description.
+### 2. Free AI key — Gemini
+https://aistudio.google.com/apikey → **Create API key**. New keys start with `AQ.` — that's expected and supported.
 
-**Ollama (fully offline):** install from https://ollama.com, then `ollama pull qwen2.5-coder:7b` (or `:14b` if you have 16 GB+ RAM). Ollama only works when the app runs on the same PC (or a machine you own) — not on free cloud hosting.
+### 3. Render — add the new settings BEFORE pushing
+**Upgrading the existing `autoscript-agent` service** (same URL): Render → `autoscript-agent` → **Environment** → add:
+   - `DATABASE_URL` — from Neon
+   - `BETTER_AUTH_SECRET` — any random 40+ character string
+   - `ADMIN_EMAILS` — **your** email (you become Admin the first time you sign in with it)
+   - `DEMO_LOGINS` = `1` and `DEMO_PASSWORD` — any long random string
+   - Keep `GEMINI_API_KEY` and `AI_PROVIDER`. `APP_PASSWORD` is no longer used — you can delete it.
+   - Leave Google / Microsoft / GitHub / Resend empty for now.
 
-## Step 2 — Run it on your PC
+   Click **Save** (choose *Save only*, not deploy).
 
-Install Node.js 20+ from https://nodejs.org, then:
-```bash
-cd autoscript-agent
-cp .env.example .env        # Windows: copy .env.example .env   → then paste your key into .env
+**Brand-new deployment instead:** Render → **New → Blueprint** → pick the repo and fill in the same values when asked.
+
+### 4. Push to GitHub
+```
+git add -A
+git status            # .env and .env.local must NOT be listed
+git commit -m "Full-stack upgrade: Next.js, sign-in, roles, quotas, admin"
+git push
+```
+Render rebuilds automatically (3–6 minutes); the build runs the database migrations. Then check `https://<your-url>/api/health` → `{"ok":true,"database":"ok",...}`.
+
+### 5. First admin sign-in (no OAuth setup needed)
+Until Resend is set up, magic-link emails are **printed to the server log** instead of sent:
+1. Open your app → **Sign in** → enter the email you put in `ADMIN_EMAILS` → **Email me a link**.
+2. Render → your service → **Logs** → find `🔗 Magic link for you@…` → open that link.
+3. You're signed in as **Admin** — the **Admin** tab appears.
+
+### 6. Add Google / Microsoft / GitHub sign-in
+For each provider, the **callback / redirect URL** is `https://<your-url>/api/auth/callback/<provider>`.
+After adding the IDs/secrets in Render → **Environment**, click **Save, rebuild and deploy**; the button appears on the sign-in page automatically.
+
+**Google**
+1. https://console.cloud.google.com → create a project.
+2. **Google Auth Platform → Branding**: app name, support email → save. **Audience**: External.
+3. **Clients → Create client** → *Web application*.
+   - Authorized JavaScript origin: `https://<your-url>`
+   - Authorized redirect URI: `https://<your-url>/api/auth/callback/google`
+4. Copy into `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+5. While the app is in *Testing*, add your users under **Audience → Test users**, or click **Publish app**.
+
+**Microsoft (personal + work accounts)**
+1. https://entra.microsoft.com → **App registrations → New registration**.
+2. Supported account types: **Accounts in any organizational directory and personal Microsoft accounts**.
+3. Redirect URI: platform **Web**, `https://<your-url>/api/auth/callback/microsoft`.
+4. Copy **Application (client) ID** → `MICROSOFT_CLIENT_ID`.
+5. **Certificates & secrets → New client secret** → copy the **Value** → `MICROSOFT_CLIENT_SECRET`. (Secrets expire — note the date.)
+6. Keep `MICROSOFT_TENANT_ID=common`.
+
+**GitHub**
+1. GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**.
+2. Homepage URL: `https://<your-url>` · Callback URL: `https://<your-url>/api/auth/callback/github`.
+3. Copy Client ID → `GITHUB_CLIENT_ID`; **Generate a new client secret** → `GITHUB_CLIENT_SECRET`.
+
+### 7. Real magic-link emails (optional) — Resend
+1. https://resend.com → **API Keys** → create → `RESEND_API_KEY`.
+2. With the default sender `onboarding@resend.dev`, Resend only delivers to **your own** account email. To email anyone, verify a domain you own at resend.com/domains and set `EMAIL_FROM=AutoScript Agent <login@yourdomain.com>`.
+
+---
+
+## Managing users
+Admin tab → change a user's role (Guest → Member, etc.) or ban them. Banning signs the user out everywhere. You can't change your own role (prevents locking yourself out), and demo accounts are fixed by configuration.
+
+## Run locally
+```
+cp .env.example .env.local      # fill DATABASE_URL, BETTER_AUTH_SECRET, GEMINI_API_KEY, ADMIN_EMAILS (a .env file works too)
 npm install
-npm start                   # open http://localhost:8080
+npm run db:migrate
+npm run dev                     # http://localhost:3000
 ```
-Want to see the UI without any key? `MOCK_MODE=1 npm start` (Windows PowerShell: `$env:MOCK_MODE=1; npm start`).
-
-## Step 3 — Get a free live URL
-
-### Option A — Render (free forever, easiest, HTTPS included)
-1. Push this folder to a **GitHub** repo (free).
-2. Sign up at https://render.com with GitHub.
-3. **New → Blueprint** → select your repo. Render reads `render.yaml`.
-4. When asked, paste your `GEMINI_API_KEY` and choose an `APP_PASSWORD`.
-5. After the build you get a URL like `https://autoscript-agent.onrender.com`.
-
-Limits: the free service sleeps after 15 minutes without visitors; the first visit after that takes about a minute to wake up. 750 free hours/month (enough to run one app all month).
-
-### Option B — AWS EC2 on the AWS Free plan (real AWS experience, $0)
-New AWS accounts can choose the **Free plan**: it comes with free credits and AWS does **not** charge your card — the account simply stops when the free period (6 months) or credits end, unless you choose to upgrade. When signing up, **choose "Free plan", not "Paid plan".**
-
-1. Push the code to GitHub (public repo is simplest; for private, use a deploy key).
-2. Edit `deploy/ec2-setup.sh`: set `REPO_URL`, your `GEMINI_API_KEY`, and an `APP_PASSWORD`.
-3. AWS Console → region **Asia Pacific (Mumbai)** → **EC2 → Launch instance**:
-   - Name: `autoscript-agent`
-   - AMI: **Amazon Linux 2023**
-   - Instance type: one marked **"Free tier eligible"** (e.g. t3.micro)
-   - Key pair: create one (to SSH later)
-   - Network: allow **SSH (port 22) from My IP** and **HTTP (port 80) from Anywhere**
-   - Storage: keep the default
-   - Advanced details → **User data**: paste the whole contents of `deploy/ec2-setup.sh`
-4. Launch, wait ~3–4 minutes, copy the instance's **Public IPv4 address**, open `http://<that-IP>/`.
-5. To update after you push new code: SSH in and run `sudo bash /opt/autoscript-agent/deploy/update.sh`.
-
-Staying at $0 on AWS:
-- Run only **one** small instance. Don't create load balancers, NAT gateways or Elastic IPs (they eat credits).
-- Set a **Budget alert** (Billing → Budgets → "Zero spend budget") so you get an email if anything costs money.
-- **Stop** the instance when you don't need it.
-- Free HTTPS on EC2: get a free subdomain (e.g. from DuckDNS) pointing to your IP and put Caddy in front, or use Option A/C which include HTTPS.
-
-### Option C — Your PC + free tunnel (instant public URL, uses Ollama if you like)
-Run the app locally (Step 2), then:
-```bash
-cloudflared tunnel --url http://localhost:8080
-```
-Install `cloudflared` from https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/ — no account needed for quick tunnels. It prints a public `https://….trycloudflare.com` URL that works while your PC is on. This is the only way to share an Ollama-powered (fully unlimited) agent for free.
-
-### Which should I pick?
-- Want a permanent link to share/show in interviews → **Render**.
-- Want AWS on your résumé → **EC2 Free plan** (works 6 months).
-- Want unlimited AI with no quotas → **Ollama on your PC + Cloudflare tunnel**.
-
-## CI/CD (free)
-`.github/workflows/ci.yml` runs a smoke test on every push (GitHub Actions is free for public repos). Render redeploys automatically on every push to `main`.
-
-## Configuration reference
-| Variable | Default | Purpose |
-|---|---|---|
-| `AI_PROVIDER` | `gemini` | `gemini`, `groq`, `openrouter`, `ollama` (or `anthropic`, paid) |
-| `GEMINI_API_KEY` / `GROQ_API_KEY` / `OPENROUTER_API_KEY` | — | Key for the chosen provider |
-| `AI_MODEL` | provider default (`gemini-3.8-flash`, `openai/gpt-oss-120b`, `qwen2.5-coder:7b`) | Override the model |
-| `MAX_TOKENS` | provider default | Max output per generation; big frameworks may need "Continue generating" |
-| `APP_PASSWORD` | empty | **Set it on any public URL** so strangers can't use up your free quota |
-| `RATE_LIMIT_PER_HOUR` | `30` | Generations per visitor IP per hour |
-| `MOCK_MODE` | off | `1` = canned responses, no AI calls |
-
-## Stacks added to your list (★)
-Java + RestAssured + Cucumber · Java + Selenide + JUnit 5 · TS + Playwright + Cucumber · TS + WebdriverIO + Appium · TS + Detox · TS + Pact · Python + pytest-bdd + Playwright · Python + Schemathesis · C# + Appium + NUnit · Maestro · Kotlin + Espresso · Swift + XCUITest · Artillery. Edit `stacks.json` to add more.
+Set `MOCK_MODE=1` to try everything without calling the AI. Local Postgres or a Neon dev branch both work.
 
 ## Project layout
 ```
-server.js            Express API: /api/stacks, /api/generate (streaming), /health; provider switch
-stacks.json          All 54 stacks + guidance given to the agent
-public/              UI (index.html, styles.css, app.js)
-Dockerfile           Container (used by EC2 option)
-render.yaml          Render free-tier blueprint
-deploy/              EC2 setup + update scripts
-.github/workflows/   Free CI smoke test
+src/app/                 pages (/, /login, /history, /admin) and API routes
+src/app/api/generate     streaming generation + quota enforcement
+src/app/api/admin/users  admin user list, role changes, bans
+src/lib/auth.ts          Better Auth config (providers, roles, anonymous, magic link)
+src/lib/permissions.ts   role definitions (admin, demo_admin, member, guest)
+src/lib/quota.ts         monthly limits and usage counting
+src/lib/ai.ts            AI providers (Gemini native, OpenAI-compatible, Claude, mock)
+src/db/                  Drizzle schema; migrations in /drizzle
+render.yaml              Render blueprint · .github/workflows/ci.yml  CI
 ```
 
-## Tips for best results on free models
-- Free models write less per reply than paid ones. If a project stops midway, click **↪ Continue generating**.
-- Be specific in the description (pages, flows, endpoints, test data), and select only the features you need — fewer features = complete output in one go.
+## Notes
+- Render free web services sleep after 15 minutes idle; the first request then takes ~50 s.
+- Demo accounts are shared by all visitors (and so is their quota and history) — turn them off with `DEMO_LOGINS=0`.
+- On Gemini's free tier, prompts may be used by Google to improve its products — don't paste confidential code.
+- Change the database schema in `src/db/schema.ts`, then `npm run db:generate` and commit the new file in `/drizzle`.

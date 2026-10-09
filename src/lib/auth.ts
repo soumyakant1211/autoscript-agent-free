@@ -18,7 +18,10 @@ export const enabledProviders = {
   github: !!(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET),
   magicLink: true, // without RESEND_API_KEY the link is printed to the server log (dev only)
   demo: env.DEMO_LOGINS === "1" && !!env.DEMO_PASSWORD,
+  password: false,
 };
+// Email + password login is on when there's a private owner login and/or demo accounts.
+enabledProviders.password = enabledProviders.demo || !!(env.OWNER_EMAIL && env.OWNER_PASSWORD);
 
 export const auth = betterAuth({
   appName: "AutoScript Agent",
@@ -27,8 +30,8 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema }),
 
-  // Password login exists ONLY for the seeded demo accounts; public sign-up is off.
-  emailAndPassword: { enabled: enabledProviders.demo, disableSignUp: true },
+  // Password login exists ONLY for the owner (OWNER_EMAIL/OWNER_PASSWORD) and the demo accounts; public sign-up is off.
+  emailAndPassword: { enabled: enabledProviders.password, disableSignUp: true },
 
   socialProviders: {
     ...(enabledProviders.google && {

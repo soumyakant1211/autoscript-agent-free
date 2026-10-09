@@ -9,7 +9,7 @@ export type Me = {
   canSaveHistory?: boolean;
   canViewAdmin?: boolean;
   canManageUsers?: boolean;
-  providers: { google: boolean; microsoft: boolean; github: boolean; magicLink: boolean; demo: boolean };
+  providers: { google: boolean; microsoft: boolean; github: boolean; magicLink: boolean; demo: boolean; password: boolean };
   ai: { provider: string; model: string };
   demoAccounts?: { label: string; note: string; email: string; password: string }[];
 };

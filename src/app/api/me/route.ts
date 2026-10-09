@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { enabledProviders } from "@/lib/auth";
-import { demoAccountsForDisplay, ensureDemoUsers } from "@/lib/demo";
+import { demoAccountsForDisplay, ensurePasswordAccounts } from "@/lib/demo";
 import { MOCK, MODEL, PROVIDER } from "@/lib/ai";
 import { LIMITS, generationsUsed, getViewer, ipHash, nextMonthStart } from "@/lib/quota";
 
@@ -11,9 +11,10 @@ export async function GET() {
   const providers = enabledProviders;
   const ai = { provider: PROVIDER, model: MOCK ? "mock" : MODEL };
   let demoAccounts: ReturnType<typeof demoAccountsForDisplay> = [];
-  if (enabledProviders.demo) {
-    // Make sure the demo accounts exist before anyone tries to sign in with them.
-    try { await ensureDemoUsers(); demoAccounts = demoAccountsForDisplay(); } catch (e) { console.error("Demo accounts:", e); }
+  if (enabledProviders.password) {
+    // Make sure the owner + demo accounts exist before anyone tries to sign in with them.
+    try { await ensurePasswordAccounts(); } catch (e) { console.error("Password accounts:", e); }
+    if (enabledProviders.demo) demoAccounts = demoAccountsForDisplay();
   }
   if (!viewer) return Response.json({ user: null, providers, ai, demoAccounts });
 

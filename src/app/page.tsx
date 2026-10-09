@@ -1,5 +1,10 @@
 import Generator from "@/components/Generator";
+import { RequireSession } from "@/components/RequireSession";
 
 export default function Home() {
-  return <Generator />;
+  return (
+    <RequireSession>
+      <Generator />
+    </RequireSession>
+  );
 }

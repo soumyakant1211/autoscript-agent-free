@@ -11,6 +11,7 @@ export type Me = {
   canManageUsers?: boolean;
   providers: { google: boolean; microsoft: boolean; github: boolean; magicLink: boolean; demo: boolean };
   ai: { provider: string; model: string };
+  demoAccounts?: { label: string; note: string; email: string; password: string }[];
 };
 
 const Ctx = createContext<{ me: Me | null; loading: boolean; refresh: () => Promise<Me | null> }>({

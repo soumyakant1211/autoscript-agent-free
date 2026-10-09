@@ -19,6 +19,7 @@ export function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const signedIn = me?.user && me.tier !== "anonymous";
+  if (path === "/login") return null; // the sign-in page has its own full-screen layout
 
   const nav = [
     { href: "/", label: "Generator", show: true },
@@ -30,7 +31,7 @@ export function Header() {
     await authClient.signOut();
     setOpen(false);
     await refresh();
-    router.push("/");
+    router.push("/login");
   }
 
   return (

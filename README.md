@@ -19,7 +19,7 @@ Full-stack AI agent that generates complete, runnable **test automation framewor
 | **Guest (no sign-in)** | Click Generate or "Continue as guest" | 2 (per browser **and** per IP) | 3 | — | — |
 | **Guest** | Sign in with Google / Microsoft / GitHub / email | 5 | 5 | — | — |
 | **Member** | An admin upgrades you | 50 | 30 | ✓ | — |
-| **Demo admin** | "Demo admin" button (shared, public) | 5 | 5 | ✓ | Read-only, emails masked |
+| **Demo admin** | Demo account on the sign-in page (shared, public) | 5 | 5 | ✓ | Read-only, emails masked |
 | **Admin** | Your email in `ADMIN_EMAILS` | Unlimited | Unlimited | ✓ | Full: change roles, ban/unban |
 
 - Limits reset on the 1st of each month (UTC) and can be changed with `LIMIT_*` env vars.
@@ -45,7 +45,7 @@ https://aistudio.google.com/apikey → **Create API key**. New keys start with `
    - `DATABASE_URL` — from Neon
    - `BETTER_AUTH_SECRET` — any random 40+ character string
    - `ADMIN_EMAILS` — **your** email (you become Admin the first time you sign in with it)
-   - `DEMO_LOGINS` = `1` and `DEMO_PASSWORD` — any long random string
+   - `DEMO_LOGINS` = `1` and `DEMO_PASSWORD` — e.g. `Recruiter@2026`. **This password is shown publicly** on the sign-in page for the 3 demo accounts, so never reuse a real password.
    - Keep `GEMINI_API_KEY` and `AI_PROVIDER`. `APP_PASSWORD` is no longer used — you can delete it.
    - Leave Google / Microsoft / GitHub / Resend empty for now.
 
@@ -99,6 +99,14 @@ After adding the IDs/secrets in Render → **Environment**, click **Save, rebuil
 2. With the default sender `onboarding@resend.dev`, Resend only delivers to **your own** account email. To email anyone, verify a domain you own at resend.com/domains and set `EMAIL_FROM=AutoScript Agent <login@yourdomain.com>`.
 
 ---
+
+## Sign-in page
+Visitors land on `/login`; the generator, History and Admin need a session. Options shown:
+- **Continue with Google / Microsoft / GitHub** — greyed out until you add that provider's keys.
+- **Email + password** — only the demo accounts have passwords (public sign-up is off).
+- **Email me a sign-in link** — anyone; new accounts start as Guest.
+- **Demo accounts for recruiters** — `demo-admin@autoscript.demo` (read-only admin), `demo-member@autoscript.demo`, `demo-guest@autoscript.demo`, all with `DEMO_PASSWORD`. Created automatically; any change a visitor makes to them is reset on the next restart.
+- **Continue as guest** — no sign-in, 2 frameworks/month.
 
 ## Managing users
 Admin tab → change a user's role (Guest → Member, etc.) or ban them. Banning signs the user out everywhere. You can't change your own role (prevents locking yourself out), and demo accounts are fixed by configuration.

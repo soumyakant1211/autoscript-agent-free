@@ -2,10 +2,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useMe } from "@/components/MeProvider";
+import { RequireSession } from "@/components/RequireSession";
 
 type Row = { id: string; title: string; stackLabel: string; updatedAt: string };
 
 export default function HistoryPage() {
+  return <RequireSession><HistoryPageInner /></RequireSession>;
+}
+
+function HistoryPageInner() {
   const { me, loading } = useMe();
   const [rows, setRows] = useState<Row[] | null>(null);
 

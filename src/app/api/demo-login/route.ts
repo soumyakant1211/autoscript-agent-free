@@ -8,7 +8,6 @@ export async function POST(req: Request) {
   const demo = as && DEMO_ACCOUNTS[as];
   if (!demo) return Response.json({ error: "Unknown demo account." }, { status: 400 });
   await ensureDemoUsers();
-  // asResponse → returns Better Auth's response including the Set-Cookie header.
   return auth.api.signInEmail({
     body: { email: demo.email, password: process.env.DEMO_PASSWORD! },
     headers: req.headers,

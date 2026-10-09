@@ -273,8 +273,7 @@ export default function Generator() {
           {busy ? "⏳ Generating…" : quotaLeft === 0 ? "Monthly limit reached" : "⚡ Generate framework"}
         </button>
         <p className="mt-2 text-center text-xs text-muted">
-          {!me?.user ? "No sign-in needed to try — guests get 2 free generations." :
-            quotaLeft === null ? "Unlimited generations." :
+          {quotaLeft === null ? "Unlimited generations." :
             `${quotaLeft} generation${quotaLeft === 1 ? "" : "s"} left this month.`}
           {me && (!me.user || me.tier === "anonymous") && <> <Link href="/login" className="text-accent2">Sign in</Link> for 5/month.</>}
         </p>

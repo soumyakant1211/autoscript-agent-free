@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { enabledProviders } from "@/lib/auth";
+import { demoAccountsForDisplay, ensureDemoUsers } from "@/lib/demo";
 import { MOCK, MODEL, PROVIDER } from "@/lib/ai";
 import { LIMITS, generationsUsed, getViewer, ipHash, nextMonthStart } from "@/lib/quota";
 
@@ -9,7 +10,12 @@ export async function GET() {
   const viewer = await getViewer(h);
   const providers = enabledProviders;
   const ai = { provider: PROVIDER, model: MOCK ? "mock" : MODEL };
-  if (!viewer) return Response.json({ user: null, providers, ai });
+  let demoAccounts: ReturnType<typeof demoAccountsForDisplay> = [];
+  if (enabledProviders.demo) {
+    // Make sure the demo accounts exist before anyone tries to sign in with them.
+    try { await ensureDemoUsers(); demoAccounts = demoAccountsForDisplay(); } catch (e) { console.error("Demo accounts:", e); }
+  }
+  if (!viewer) return Response.json({ user: null, providers, ai, demoAccounts });
 
   const limit = LIMITS[viewer.tier];
   const used = await generationsUsed(viewer.user.id, viewer.tier, ipHash(h));
@@ -28,5 +34,6 @@ export async function GET() {
     canManageUsers: viewer.tier === "admin",
     providers,
     ai,
+    demoAccounts,
   });
 }

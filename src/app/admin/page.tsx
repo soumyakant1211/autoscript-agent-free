@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useMe } from "@/components/MeProvider";
+import { RequireSession } from "@/components/RequireSession";
 
 type U = { id: string; name: string; email: string; role: string; tier: string; banned: boolean; isDemo: boolean; isSelf: boolean; generationsThisMonth: number; createdAt: string };
 type Data = { readOnly: boolean; roles: string[]; users: U[]; stats: { generationsThisMonth: number; refinesThisMonth: number; usersByTier: Record<string, number>; topStacks: { label: string; count: number }[] } };
@@ -8,6 +9,10 @@ type Data = { readOnly: boolean; roles: string[]; users: U[]; stats: { generatio
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", demo_admin: "Demo admin", member: "Member", guest: "Guest" };
 
 export default function AdminPage() {
+  return <RequireSession><AdminPageInner /></RequireSession>;
+}
+
+function AdminPageInner() {
   const { me, loading } = useMe();
   const [data, setData] = useState<Data | null>(null);
   const [q, setQ] = useState("");

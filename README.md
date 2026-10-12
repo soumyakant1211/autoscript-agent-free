@@ -45,6 +45,7 @@ https://aistudio.google.com/apikey → **Create API key**. New keys start with `
    - `DATABASE_URL` — from Neon
    - `BETTER_AUTH_SECRET` — any random 40+ character string
    - `ADMIN_EMAILS` — **your** email (you become Admin the first time you sign in with it)
+   - `OWNER_EMAIL` + `OWNER_PASSWORD` — **your private admin login** for the Email/Password form (12+ characters, not used anywhere else). Only visible in Render.
    - `DEMO_LOGINS` = `1` and `DEMO_PASSWORD` — e.g. `Recruiter@2026`. **This password is shown publicly** on the sign-in page for the 3 demo accounts, so never reuse a real password.
    - Keep `GEMINI_API_KEY` and `AI_PROVIDER`. `APP_PASSWORD` is no longer used — you can delete it.
    - Leave Google / Microsoft / GitHub / Resend empty for now.
@@ -63,7 +64,10 @@ git push
 Render rebuilds automatically (3–6 minutes); the build runs the database migrations. Then check `https://<your-url>/api/health` → `{"ok":true,"database":"ok",...}`.
 
 ### 5. First admin sign-in (no OAuth setup needed)
-Until Resend is set up, magic-link emails are **printed to the server log** instead of sent:
+Easiest: sign in on the **Email / Password** form with your `OWNER_EMAIL` and `OWNER_PASSWORD` — you're Admin straight away.
+To change your password later, change `OWNER_PASSWORD` in Render and redeploy.
+
+Alternatively, use an email link. Until Resend is set up, magic-link emails are **printed to the server log** instead of sent:
 1. Open your app → **Sign in** → enter the email you put in `ADMIN_EMAILS` → **Email me a link**.
 2. Render → your service → **Logs** → find `🔗 Magic link for you@…` → open that link.
 3. You're signed in as **Admin** — the **Admin** tab appears.
@@ -103,7 +107,7 @@ After adding the IDs/secrets in Render → **Environment**, click **Save, rebuil
 ## Sign-in page
 Visitors land on `/login`; the generator, History and Admin need a session. Options shown:
 - **Continue with Google / Microsoft / GitHub** — greyed out until you add that provider's keys.
-- **Email + password** — only the demo accounts have passwords (public sign-up is off).
+- **Email + password** — only your private owner login and the demo accounts have passwords (public sign-up is off).
 - **Email me a sign-in link** — anyone; new accounts start as Guest.
 - **Demo accounts for recruiters** — `demo-admin@autoscript.demo` (read-only admin), `demo-member@autoscript.demo`, `demo-guest@autoscript.demo`, all with `DEMO_PASSWORD`. Created automatically; any change a visitor makes to them is reset on the next restart.
 - **Continue as guest** — no sign-in, 2 frameworks/month.

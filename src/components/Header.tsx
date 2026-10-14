@@ -19,10 +19,10 @@ export function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const signedIn = me?.user && me.tier !== "anonymous";
-  if (path === "/login") return null; // the sign-in page has its own full-screen layout
+  if (path === "/login" || path === "/") return null; // sign-in and landing pages have their own layout
 
   const nav = [
-    { href: "/", label: "Generator", show: true },
+    { href: "/app", label: "Generator", show: true },
     { href: "/history", label: "History", show: !!me?.canSaveHistory },
     { href: "/admin", label: "Admin", show: !!me?.canViewAdmin },
   ].filter((n) => n.show);
@@ -37,7 +37,7 @@ export function Header() {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-gradient-to-r from-[#0d1422] to-bg px-4 py-3 sm:px-5">
       <div className="flex items-center gap-5">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/app" className="flex items-center gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-accent to-accent2 font-mono font-bold text-[#04131a]">⟨/⟩</span>
           <span className="leading-tight">
             <span className="block text-[17px] font-bold">AutoScript Agent</span>
@@ -57,7 +57,7 @@ export function Header() {
       <div className="flex items-center gap-2">
         {me?.quota && (
           <span className="hidden text-xs text-muted sm:inline" title={`Resets ${new Date(me.quota.resetsAt).toLocaleDateString()}`}>
-            {me.quota.limit === null ? "Unlimited generations" : `${Math.max(0, me.quota.limit - me.quota.used)} of ${me.quota.limit} left this month`}
+            {me.quota.limit === null ? "Unlimited generations" : `${Math.max(0, me.quota.limit - me.quota.used)} of ${me.quota.limit} left ${me.quota.period === "day" ? "today" : "this month"}`}
           </span>
         )}
         {me?.tier && <span className={`tag ${TIER_COLOR[me.tier]}`}>{me.tierLabel}</span>}

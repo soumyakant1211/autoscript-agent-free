@@ -1,15 +1,18 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, gt, like, lt } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { db } from "@/db";
 import { account, user } from "@/db/schema";
+import { SANDBOX_DOMAIN, SANDBOX_TTL_HOURS } from "./sandbox-const";
+
+const SANDBOX_PER_IP_PER_DAY = Number(process.env.SANDBOX_PER_IP_PER_DAY || 20);
 
 /** Shared demo accounts for recruiters/visitors. Their password (DEMO_PASSWORD) is shown on the sign-in page. */
 export const DEMO_ACCOUNTS = {
   admin: { email: "demo-admin@autoscript.demo", name: "Demo Admin", role: "demo_admin", label: "Demo Admin", note: "Read-only admin panel" },
-  member: { email: "demo-member@autoscript.demo", name: "Demo Member", role: "member", label: "Demo Member", note: "History + 50/month" },
-  guest: { email: "demo-guest@autoscript.demo", name: "Demo Guest", role: "guest", label: "Demo Guest", note: "5/month, no history" },
+  member: { email: "demo-member@autoscript.demo", name: "Demo Member", role: "member", label: "Demo Member", note: "Saved project history" },
+  guest: { email: "demo-guest@autoscript.demo", name: "Demo Guest", role: "guest", label: "Demo Guest", note: "Basic access" },
 } as const;
 export type DemoKind = keyof typeof DEMO_ACCOUNTS;
 
@@ -55,6 +58,35 @@ export function ensurePasswordAccounts() {
 
 /** Kept for the one-click demo endpoint. */
 export const ensureDemoUsers = ensurePasswordAccounts;
+
+const DEMO_BY_EMAIL = new Map<string, (typeof DEMO_ACCOUNTS)[DemoKind]>(Object.values(DEMO_ACCOUNTS).map((d) => [d.email, d]));
+export const isDemoTemplateEmail = (email?: string) => !!email && DEMO_BY_EMAIL.has(email.trim().toLowerCase());
+
+/** Delete demo copies older than SANDBOX_TTL_HOURS (sessions, accounts and projects cascade). */
+export async function cleanupSandboxes() {
+  const cutoff = new Date(Date.now() - SANDBOX_TTL_HOURS * 3600_000);
+  await db.delete(user).where(and(like(user.email, `%@${SANDBOX_DOMAIN}`), lt(user.createdAt, cutoff)));
+}
+
+/**
+ * Creates a private, temporary copy of a demo account (same role, same public password) and returns its email.
+ * Called when someone signs in with one of the shared demo credentials, so every visitor gets their own sandbox.
+ */
+export async function createSandbox(templateEmail: string, ipHash: string) {
+  const tpl = DEMO_BY_EMAIL.get(templateEmail.trim().toLowerCase());
+  if (!tpl) throw new Error("Not a demo account");
+  await cleanupSandboxes().catch((e) => console.warn("[sandbox] cleanup failed", e));
+  // Abuse guard: at most N new sandboxes per visitor per day.
+  const since = new Date(Date.now() - SANDBOX_TTL_HOURS * 3600_000);
+  const tag = ipHash.slice(0, 10); // visitor tag (hashed IP) — lets us count sandboxes per visitor without storing IPs
+  const [{ n }] = await db.select({ n: count() }).from(user)
+    .where(and(like(user.email, `%.${tag}@${SANDBOX_DOMAIN}`), gt(user.createdAt, since)));
+  if (Number(n) >= SANDBOX_PER_IP_PER_DAY) throw new Error("Too many demo sessions from this network today. Please sign in instead.");
+  const kind = tpl.role === "demo_admin" ? "admin" : tpl.role;
+  const email = `${kind}-${randomUUID().slice(0, 6)}.${tag}@${SANDBOX_DOMAIN}`;
+  await upsertPasswordUser({ email, name: tpl.name, role: tpl.role, passwordHash: await hashPassword(process.env.DEMO_PASSWORD!) });
+  return email;
+}
 
 export function demoAccountsForDisplay() {
   return Object.values(DEMO_ACCOUNTS).map((d) => ({ label: d.label, note: d.note, email: d.email, password: process.env.DEMO_PASSWORD || "" }));

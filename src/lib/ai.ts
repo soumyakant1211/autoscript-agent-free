@@ -114,9 +114,41 @@ async function streamAnthropic(model: string, { system, messages, signal, onText
   return { stopReason: final.stop_reason === "max_tokens" ? "max_tokens" : "end_turn" };
 }
 
-async function streamMock({ messages, onText }: StreamArgs): Promise<StreamResult> {
-  const last = messages[messages.length - 1]?.content.slice(0, 160) || "";
-  const demo = `## Plan\n- Mock response (MOCK_MODE=1) — no AI call made\n- Page Object Model, env-based config\n\n<<<FILE: README.md>>>\n# Demo project\nGenerated in mock mode.\n<<<END FILE>>>\n<<<FILE: tests/example.spec.ts>>>\n// ${last.replace(/\n/g, " ")}\n<<<END FILE>>>\n\n## How to run\n1. Set GEMINI_API_KEY\n2. Unset MOCK_MODE`;
+const MOCK_FILES: Record<string, string> = {
+  "package.json": `{\n  "name": "demo-tests",\n  "private": true,\n  "scripts": { "test": "playwright test" },\n  "devDependencies": { "@playwright/test": "^1.55.0" }\n}`,
+  "playwright.config.ts": `import { defineConfig } from "@playwright/test";\nexport default defineConfig({ use: { baseURL: process.env.BASE_URL ?? "https://www.saucedemo.com" } });`,
+  "tests/login.spec.ts": `import { test, expect } from "@playwright/test";\ntest("login", async ({ page }) => {\n  await page.goto("/");\n  await expect(page).toHaveTitle(/Swag/);\n});`,
+  "README.md": "# Demo project\nGenerated in mock mode (MOCK_MODE=1).",
+};
+
+async function streamMock({ system, messages, onText }: StreamArgs): Promise<StreamResult> {
+  const last = messages[messages.length - 1]?.content || "";
+  const emitSlowly = async (s: string) => { for (let i = 0; i < s.length; i += 24) { onText(s.slice(i, i + 24)); await new Promise((r) => setTimeout(r, 5)); } };
+  const fileBlock = (p: string, c: string) => `<<<FILE: ${p}>>>\n${c}\n<<<END FILE>>>\n`;
+  if (system.includes("AutoScript Agent's architect")) {
+    await emitSlowly(JSON.stringify({
+      summary: ["Mock plan (MOCK_MODE=1) — no AI call made", "Playwright Test with TypeScript"],
+      files: Object.keys(MOCK_FILES).map((path) => ({ path, purpose: `mock ${path}`, exports: "" })),
+      howToRun: "1. `npm install`\n2. `npx playwright test`",
+    }));
+    return { stopReason: "end_turn" };
+  }
+  if (last.includes("Write ONLY these files now")) {
+    const wanted = Object.keys(MOCK_FILES).filter((p) => last.includes(`- ${p}\n`) || last.endsWith(`- ${p}`) || last.includes(`- ${p}\n\nOutput`));
+    let out = "";
+    for (const p of wanted) {
+      // Test hook: a description containing "[mock:broken]" gets a syntax error so the auto-fix loop runs.
+      const broken = last.includes("[mock:broken]") && p === "tests/login.spec.ts";
+      out += fileBlock(p, broken ? MOCK_FILES[p].replace("await page.goto(\"/\");", "await page.goto(\"/\";") : MOCK_FILES[p]);
+    }
+    await emitSlowly(out);
+    return { stopReason: "end_turn" };
+  }
+  if (last.includes("automatic syntax check found")) {
+    await emitSlowly(fileBlock("tests/login.spec.ts", MOCK_FILES["tests/login.spec.ts"]));
+    return { stopReason: "end_turn" };
+  }
+  const demo =`## Plan\n- Mock response (MOCK_MODE=1) — no AI call made\n- Page Object Model, env-based config\n\n<<<FILE: README.md>>>\n# Demo project\nGenerated in mock mode.\n<<<END FILE>>>\n<<<FILE: tests/example.spec.ts>>>\n// ${last.slice(0, 160).replace(/\n/g, " ")}\n<<<END FILE>>>\n\n## How to run\n1. Set GEMINI_API_KEY\n2. Unset MOCK_MODE`;
   for (let i = 0; i < demo.length; i += 16) { onText(demo.slice(i, i + 16)); await new Promise((r) => setTimeout(r, 10)); }
   return { stopReason: "end_turn" };
 }
@@ -166,6 +198,16 @@ export async function streamCompletion(args: StreamArgs): Promise<StreamResult> 
   }
   throw friendly(lastErr);
 }
+
+/** Non-streaming helper: collects the full text of a completion (with the same retries/fallbacks). */
+export async function completeText(system: string, messages: Msg[], signal: AbortSignal): Promise<{ text: string; stopReason: StreamResult["stopReason"] }> {
+  let text = "";
+  const r = await streamCompletion({ system, messages, signal, onText: (t) => { text += t; } });
+  return { text, stopReason: r.stopReason };
+}
+
+/** Smaller batches for providers with small output limits (Groq). */
+export const FILES_PER_BATCH = PROVIDER === "groq" ? 2 : PROVIDER === "ollama" ? 3 : 5;
 
 function friendly(e: unknown) {
   if (e instanceof AIError && [429, 500, 502, 503, 504].includes(e.status)) {

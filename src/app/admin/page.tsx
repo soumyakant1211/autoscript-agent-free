@@ -4,7 +4,7 @@ import { useMe } from "@/components/MeProvider";
 import { RequireSession } from "@/components/RequireSession";
 
 type U = { id: string; name: string; email: string; role: string; tier: string; banned: boolean; isDemo: boolean; isSelf: boolean; generationsThisMonth: number; createdAt: string };
-type Data = { readOnly: boolean; roles: string[]; users: U[]; stats: { generationsThisMonth: number; refinesThisMonth: number; usersByTier: Record<string, number>; topStacks: { label: string; count: number }[] } };
+type Data = { readOnly: boolean; roles: string[]; users: U[]; stats: { generationsThisMonth: number; refinesThisMonth: number; demoSessions: number; usersByTier: Record<string, number>; topStacks: { label: string; count: number }[] } };
 
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", demo_admin: "Demo admin", member: "Member", guest: "Guest" };
 
@@ -48,12 +48,13 @@ function AdminPageInner() {
       </div>
 
       {s && (
-        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
           {[
             ["Generations this month", s.generationsThisMonth],
             ["Follow-up changes", s.refinesThisMonth],
             ["Members + admins", (s.usersByTier.member || 0) + (s.usersByTier.admin || 0) + (s.usersByTier.demo_admin || 0)],
             ["Guests (signed in / anonymous)", `${s.usersByTier.guest || 0} / ${s.usersByTier.anonymous || 0}`],
+            ["Private demo sessions (24h)", s.demoSessions],
           ].map(([label, v]) => (
             <div key={label as string} className="panel py-3"><div className="text-xs text-muted">{label}</div><div className="mt-1 text-2xl font-bold">{v}</div></div>
           ))}

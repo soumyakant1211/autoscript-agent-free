@@ -3,10 +3,13 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin, anonymous, magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { ac, roles } from "./permissions";
 import { sendMagicLinkEmail } from "./email";
+import { createSandbox, isDemoTemplateEmail } from "./demo";
+import { ipHash } from "./ip";
 
 const env = process.env;
 const adminEmails = (env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
@@ -46,6 +49,22 @@ export const auth = betterAuth({
     }),
     ...(enabledProviders.github && {
       github: { clientId: env.GITHUB_CLIENT_ID!, clientSecret: env.GITHUB_CLIENT_SECRET! },
+    }),
+  },
+
+  hooks: {
+    // Signing in with a shared demo account (credentials shown on the sign-in page) gives each visitor
+    // a PRIVATE temporary copy instead, so visitors never share quota or history.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email" || !enabledProviders.demo) return;
+      const body = ctx.body as { email?: string; password?: string } | undefined;
+      if (!isDemoTemplateEmail(body?.email) || body?.password !== env.DEMO_PASSWORD) return;
+      try {
+        const email = await createSandbox(body!.email!, ipHash(ctx.headers ?? new Headers()));
+        return { context: { ...ctx, body: { ...body, email } } };
+      } catch (e) {
+        throw new APIError("TOO_MANY_REQUESTS", { message: (e as Error).message });
+      }
     }),
   },
 

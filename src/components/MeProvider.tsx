@@ -5,7 +5,8 @@ export type Me = {
   user: { id: string; name: string; email: string | null; image: string | null; role: string | null } | null;
   tier?: "anonymous" | "guest" | "member" | "demo_admin" | "admin";
   tierLabel?: string;
-  quota?: { used: number; limit: number | null; refinesPerProject: number | null; resetsAt: string };
+  quota?: { used: number; limit: number | null; period?: "month" | "day"; refinesPerProject: number | null; resetsAt: string };
+  sandbox?: boolean;
   canSaveHistory?: boolean;
   canViewAdmin?: boolean;
   canManageUsers?: boolean;

@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   const next = () => {
     const n = new URLSearchParams(window.location.search).get("next");
-    return n && n.startsWith("/") && !n.startsWith("//") ? n : "/";
+    return n && n.startsWith("/") && !n.startsWith("//") ? n : "/app";
   };
 
   // Already signed in (not as an anonymous guest) → go straight to the app.
@@ -101,7 +101,7 @@ export default function LoginPage() {
       const { error } = await authClient.signIn.anonymous();
       if (error) { setBusy(null); setStatus({ kind: "err", text: error.message || "Couldn't start a guest session" }); return; }
     }
-    await refresh(); router.replace("/");
+    await refresh(); router.replace("/app");
   }
 
   function fillDemo(d: { email: string; password: string }) {
@@ -187,9 +187,9 @@ export default function LoginPage() {
           {status && <p role="alert" className={`mt-4 text-sm ${status.kind === "ok" ? "text-accent" : "text-danger"}`}>{status.text}</p>}
 
           {!!me?.demoAccounts?.length && (
-            <div className="mt-6 rounded-xl border border-dashed border-accent2/40 bg-accent2/5 p-4">
+            <div id="demo" className="mt-6 scroll-mt-6 rounded-xl border border-dashed border-accent2/40 bg-accent2/5 p-4">
               <div className="text-sm font-semibold text-accent2">Demo accounts for recruiters</div>
-              <p className="mb-3 mt-0.5 text-xs text-muted">Click <b>Use</b> to fill the form, then <b>Sign in</b>. These accounts are shared with other visitors.</p>
+              <p className="mb-3 mt-0.5 text-xs text-muted">Click <b>Use</b>, then <b>Sign in</b>. Each sign-in opens your own <b>private copy</b> — nobody else sees your work, and it&apos;s deleted after 24 hours. Up to 5 frameworks per day.</p>
               <ul className="grid gap-2">
                 {me.demoAccounts.map((d) => (
                   <li key={d.email} className="flex items-center justify-between gap-2 rounded-lg border border-line bg-panel2 px-3 py-2">

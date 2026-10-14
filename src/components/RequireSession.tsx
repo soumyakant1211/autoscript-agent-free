@@ -11,7 +11,7 @@ export function RequireSession({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !ok) {
       const path = window.location.pathname;
-      router.replace(path === "/" ? "/login" : `/login?next=${encodeURIComponent(path)}`);
+      router.replace(path === "/app" ? "/login" : `/login?next=${encodeURIComponent(path)}`);
     }
   }, [loading, ok, router]);
   if (!ok) return <div className="grid flex-1 place-items-center p-10 text-muted">Loading…</div>;

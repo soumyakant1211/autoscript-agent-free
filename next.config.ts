@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  serverExternalPackages: ["pg"],
+  serverExternalPackages: ["pg", "web-tree-sitter", "@vscode/tree-sitter-wasm"],
 };
 
 export default nextConfig;

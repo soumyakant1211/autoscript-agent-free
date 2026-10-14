@@ -1,8 +1,9 @@
-import { desc, eq, gte, ilike, or, sql, and } from "drizzle-orm";
+import { desc, eq, gte, ilike, notLike, like, or, sql, and, count } from "drizzle-orm";
 import { db } from "@/db";
 import { usageEvent, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { DEMO_ACCOUNTS } from "@/lib/demo";
+import { SANDBOX_DOMAIN, isSandboxEmail } from "@/lib/sandbox-const";
 import { ROLE_ORDER } from "@/lib/permissions";
 import { STACK_INDEX } from "@/lib/prompt";
 import { getViewer, monthStart, tierOf, usageByUsers } from "@/lib/quota";
@@ -21,6 +22,7 @@ export async function GET(req: Request) {
 
   const where = and(
     showAnon ? undefined : eq(user.isAnonymous, false),
+    or(notLike(user.email, `%@${SANDBOX_DOMAIN}`), eq(user.id, viewer.user.id)), // private demo copies are hidden (except yourself)
     q ? or(ilike(user.email, `%${q}%`), ilike(user.name, `%${q}%`)) : undefined
   );
   const rows = await db.select().from(user).where(where).orderBy(desc(user.createdAt)).limit(200);
@@ -34,7 +36,9 @@ export async function GET(req: Request) {
   const topStacks = await db.select({ stackId: usageEvent.stackId, n: sql<number>`count(*)::int` }).from(usageEvent)
     .where(and(gte(usageEvent.createdAt, since), eq(usageEvent.kind, "generate"))).groupBy(usageEvent.stackId)
     .orderBy(desc(sql`count(*)`)).limit(5);
-  const byRole = await db.select({ role: user.role, anon: user.isAnonymous, n: sql<number>`count(*)::int` }).from(user).groupBy(user.role, user.isAnonymous);
+  const byRole = await db.select({ role: user.role, anon: user.isAnonymous, n: sql<number>`count(*)::int` }).from(user).where(notLike(user.email, `%@${SANDBOX_DOMAIN}`)).groupBy(user.role, user.isAnonymous);
+
+  const [{ n: sandboxes }] = await db.select({ n: count() }).from(user).where(like(user.email, `%@${SANDBOX_DOMAIN}`));
 
   return Response.json({
     readOnly,
@@ -45,6 +49,7 @@ export async function GET(req: Request) {
       usersByTier: byRole.reduce<Record<string, number>>((acc, r) => {
         const t = tierOf({ role: r.role, isAnonymous: r.anon }); acc[t] = (acc[t] || 0) + Number(r.n); return acc;
       }, {}),
+      demoSessions: Number(sandboxes),
       topStacks: topStacks.map((s) => ({ label: STACK_INDEX[s.stackId]?.label || s.stackId, count: Number(s.n) })),
     },
     users: rows.map((r) => ({
@@ -54,7 +59,7 @@ export async function GET(req: Request) {
       role: r.role || "guest",
       tier: tierOf(r),
       banned: !!r.banned,
-      isDemo: demoEmails.has(r.email),
+      isDemo: demoEmails.has(r.email) || isSandboxEmail(r.email),
       isSelf: r.id === viewer.user.id,
       generationsThisMonth: usage[r.id] || 0,
       createdAt: r.createdAt,
@@ -71,7 +76,7 @@ export async function PATCH(req: Request) {
   if (b.userId === viewer.user.id) return Response.json({ error: "You can't change your own role or ban yourself." }, { status: 400 });
   const target = await db.query.user.findFirst({ where: eq(user.id, b.userId) });
   if (!target) return Response.json({ error: "User not found." }, { status: 404 });
-  if (demoEmails.has(target.email)) return Response.json({ error: "Demo accounts are managed by configuration." }, { status: 400 });
+  if (demoEmails.has(target.email) || isSandboxEmail(target.email)) return Response.json({ error: "Demo accounts are managed by configuration." }, { status: 400 });
 
   if (b.role !== undefined) {
     if (!ROLE_ORDER.includes(b.role as never)) return Response.json({ error: "Unknown role." }, { status: 400 });

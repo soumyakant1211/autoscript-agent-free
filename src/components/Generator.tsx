@@ -15,10 +15,31 @@ const STACK_INDEX: Record<string, StackItem & { group: string }> = Object.fromEn
 );
 
 type ApiMsg = { role: "user" | "assistant"; content: string };
-type Bubble = { id: number; who: "user" | "agent"; html: string; streaming?: boolean; writing?: string | null; error?: string; errorCode?: string; canContinue?: boolean };
+type Progress = { stage: "planning" | "writing" | "validating" | "fixing" | "done"; done?: number; total?: number; message: string };
+type Validation = { checked: number; errors: number; warnings: number } | null;
+type Bubble = { id: number; who: "user" | "agent"; html: string; streaming?: boolean; writing?: string | null; error?: string; errorCode?: string; canContinue?: boolean; progress?: Progress | null; validation?: Validation };
 
 const recFor = (type: string) => new Set(FEATURES.filter((f) => (f.types === "*" || f.types.includes(type)) && f.rec).map((f) => f.name));
 let bubbleId = 1;
+
+const STAGES: Progress["stage"][] = ["planning", "writing", "validating", "fixing"];
+const STAGE_LABEL: Record<string, string> = { planning: "Plan", writing: "Write", validating: "Check", fixing: "Fix" };
+
+function ProgressBar({ p }: { p: Progress }) {
+  const pct = p.stage === "planning" ? 8 : p.stage === "writing" ? 10 + Math.round(((p.done ?? 0) / Math.max(1, p.total ?? 1)) * 75) : p.stage === "validating" ? 88 : 94;
+  const idx = STAGES.indexOf(p.stage);
+  return (
+    <div className="mt-2 w-full min-w-[220px]" role="status" aria-live="polite">
+      <div className="mb-1.5 flex gap-3 text-[11px]">
+        {STAGES.map((s, i) => (
+          <span key={s} className={i < idx ? "text-accent" : i === idx ? "font-semibold text-ink" : "text-muted"}>{i < idx ? "✓ " : ""}{STAGE_LABEL[s]}</span>
+        ))}
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-gradient-to-r from-accent to-accent2 transition-all duration-500" style={{ width: `${pct}%` }} /></div>
+      <div className="typing mt-1.5 text-xs text-muted">{p.message}</div>
+    </div>
+  );
+}
 
 export default function Generator() {
   const { me, refresh } = useMe();
@@ -138,7 +159,8 @@ export default function Generator() {
           if (!ev || !data) continue;
           const j = JSON.parse(data);
           if (ev === "delta") { full += j.text; if (performance.now() - last > 120) { apply(true); last = performance.now(); } }
-          else if (ev === "done") { firstUserMessage = j.firstUserMessage; stopReason = j.stopReason; }
+          else if (ev === "status") updateBubble(bid, { progress: j as Progress });
+          else if (ev === "done") { firstUserMessage = j.firstUserMessage; stopReason = j.stopReason; updateBubble(bid, { progress: null, validation: j.validation ?? null }); }
           else if (ev === "error") throw new Error(j.error);
         }
       }
@@ -186,7 +208,7 @@ export default function Generator() {
     abortRef.current?.abort();
     setProjectId(""); setFiles({}); setActive(null); historyRef.current = [];
     setBubbles([{ id: bubbleId++, who: "agent", html: "New project started. Configure on the left and hit <b>Generate</b>." }]);
-    window.history.replaceState(null, "", "/");
+    window.history.replaceState(null, "", "/app");
   }
 
   async function downloadZip() {
@@ -274,7 +296,7 @@ export default function Generator() {
         </button>
         <p className="mt-2 text-center text-xs text-muted">
           {quotaLeft === null ? "Unlimited generations." :
-            `${quotaLeft} generation${quotaLeft === 1 ? "" : "s"} left this month.`}
+            `${quotaLeft} generation${quotaLeft === 1 ? "" : "s"} left ${me?.quota?.period === "day" ? "today" : "this month"}.`}
           {me && (!me.user || me.tier === "anonymous") && <> <Link href="/login" className="text-accent2">Sign in</Link> for 5/month.</>}
         </p>
       </section>
@@ -314,7 +336,13 @@ export default function Generator() {
             <div key={b.id} className={`flex ${b.who === "user" ? "justify-end" : ""}`}>
               <div className={`md max-w-[92%] break-words rounded-xl border px-3 py-2.5 ${b.who === "user" ? "border-accent2/35 bg-accent2/10" : "border-line bg-panel2"}`}>
                 {b.html && <div dangerouslySetInnerHTML={{ __html: b.html }} />}
-                {b.streaming && <span className="typing text-xs text-muted">{b.writing ? ` writing ${b.writing}` : b.html ? "" : "Thinking"}</span>}
+                {b.streaming && b.progress && b.progress.stage !== "done" && <ProgressBar p={b.progress} />}
+                {b.streaming && !b.progress && <span className="typing text-xs text-muted">{b.writing ? ` writing ${b.writing}` : b.html ? "" : "Thinking"}</span>}
+                {!b.streaming && b.validation && (
+                  <div data-testid="validation-badge" className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${b.validation.errors ? "border-warn/50 text-warn" : "border-accent/50 text-accent"}`}>
+                    {b.validation.errors ? `⚠ ${b.validation.errors} issue${b.validation.errors > 1 ? "s" : ""} left — ask me to fix` : `✓ ${b.validation.checked} files syntax-checked`}
+                  </div>
+                )}
                 {b.error && (
                   <div className="mt-1 text-xs text-danger">⚠ {b.error}
                     {(b.errorCode === "MONTHLY_LIMIT" && me?.tier === "anonymous") && <> <Link href="/login" className="text-accent2 underline">Sign in now</Link></>}

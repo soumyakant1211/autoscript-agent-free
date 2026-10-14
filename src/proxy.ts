@@ -5,10 +5,10 @@ import { getSessionCookie } from "better-auth/cookies";
 export function proxy(request: NextRequest) {
   if (!getSessionCookie(request)) {
     const url = new URL("/login", request.url);
-    if (request.nextUrl.pathname !== "/") url.searchParams.set("next", request.nextUrl.pathname);
+    if (request.nextUrl.pathname !== "/app") url.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/", "/history", "/admin"] };
+export const config = { matcher: ["/app", "/history", "/admin"] };
